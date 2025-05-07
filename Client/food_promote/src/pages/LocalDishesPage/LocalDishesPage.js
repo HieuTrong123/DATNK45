@@ -79,9 +79,13 @@ export default function LocalDishesPage() {
                                 <FoodItem key={product._id} data={product} />
                             ))}
                         </div>
-                        <Pagination currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange} />
+                        {
+                            totalPages > 1 &&
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange} />
+                        }
                     </> :
                         <ListEmtry error={`Not found results for: "${keyword}"`} />)
                 }

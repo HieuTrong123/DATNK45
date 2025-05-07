@@ -10,6 +10,7 @@ import Dining_img from '../../assets/dining.png';
 import blog_img from '../../assets/blog.png';
 import RestaurantList from "../../components/common/Restaurant/RestaurantList";
 import { Link } from "react-router-dom";
+import PostListHomePage from "../../components/page/HomePage/Post/PostList";
 
 const HomePage = () => {
     const targetRef = useRef(null);
@@ -80,8 +81,8 @@ const HomePage = () => {
                     </div>
                 </div>
                 <div className={classes.postList}>
-
-                    <PostList />
+                    <PostListHomePage />
+                    {/* <PostList /> */}
                 </div>
             </div>
         </div>

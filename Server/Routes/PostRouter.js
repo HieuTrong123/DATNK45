@@ -6,8 +6,49 @@ import {
 } from "../Middleware/AuthMiddleware.js";
 import Posts from "../Models/PostModel.js";
 import upload from "../Middleware/Upload.js";
+import uploadExecl from "../Middleware/UploadExcel.js";
+import xlsx from "xlsx"
 
 const postRoute = express.Router();
+
+
+postRoute.get("/export/excel",
+    protect,
+    admin,
+    async (req, res) => {
+        try {
+            const data = await Posts.find({}).lean();
+            const ws = xlsx.utils.json_to_sheet(data);
+            const wb = xlsx.utils.book_new();
+            xlsx.utils.book_append_sheet(wb, ws, 'Posts')
+
+            const buffer = xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+            res.setHeader('Content-Disposition', 'attachment; filename=Posts.xlsx');
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.send(buffer);
+        }
+        catch (err) {
+            res.status(500).json({ message: 'Export failed', error: err.message });
+        }
+    })
+
+postRoute.post("/import/excel",
+    protect,
+    admin,
+    uploadExecl.single('file'),
+    async (req, res) => {
+        try {
+            const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const data = xlsx.utils.sheet_to_json(sheet);
+
+            await Posts.insertMany(data);
+            res.status(200).json({ message: 'Import Excel thành công' });
+        } catch (err) {
+            res.status(500).json({ message: 'Import Excel thất bại', error: err.message });
+        }
+    })
 
 postRoute.get("/chart",
     protect,
@@ -22,12 +63,35 @@ postRoute.get("/chart",
     }))
 //Get all Post
 postRoute.get(
+    "/search",
+    asyncHandler(async (req, res) => {
+        const pageSize = 12;
+        const page = Number(req.query.pageNumber) || 1;
+        const keyword = req.query.keyword
+            ? {
+                title: { $regex: req.query.keyword, $options: "i" }, // tìm theo tên sản phẩm, không phân biệt hoa thường
+            }
+            : {};
+        const count = await Posts.countDocuments({ ...keyword });
+        const listPost = await Posts.find({ ...keyword })
+            .limit(pageSize)
+            .skip(pageSize * (page - 1))
+            .sort({ _id: 1 });
+        res.json({ listPost, page, pages: Math.ceil(count / pageSize) });
+    })
+);
+postRoute.get(
     "/",
     asyncHandler(async (req, res) => {
         const pageSize = 12;
         const page = Number(req.query.pageNumber) || 1;
-        const count = await Posts.countDocuments({});
-        const listPost = await Posts.find({})
+        const keyword = req.query.keyword
+            ? {
+                title: { $regex: req.query.keyword, $options: "i" }, // tìm theo tên sản phẩm, không phân biệt hoa thường
+            }
+            : {};
+        const count = await Posts.countDocuments({ ...keyword });
+        const listPost = await Posts.find({ ...keyword })
             .limit(pageSize)
             .skip(pageSize * (page - 1))
             .sort({ _id: 1 });

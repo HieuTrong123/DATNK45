@@ -4,9 +4,14 @@ import { HEADER_CONFIG, SERVICE_URL } from "./config";
 const userBaseRestRequest = () => {
     const baseURL = SERVICE_URL;
 
-    const handleResponse = async (response, cb) => {
+    const handleResponse = async (response, cb, responseType) => {
         if (response && (response.status === 200 || response.status === 201)) {
-            const data = await response.json();
+            let data;
+            if (responseType === 'blob') {
+                data = await response.blob(); // Đọc blob nếu là file
+            } else {
+                data = await response.json(); // Đọc json bình thường
+            }
             cb(null, data);
         } else {
             const errorResult = await response.json();
@@ -18,16 +23,16 @@ const userBaseRestRequest = () => {
         cb(error);
     };
 
-    const fetchAsync = async (url, config, cb) => {
+    const fetchAsync = async (url, config, cb, responseType) => {
         try {
             const response = await fetch(url, config);
-            await handleResponse(response, cb);
+            await handleResponse(response, cb, responseType);
         } catch (error) {
             handleError(error, cb);
         }
     };
 
-    const sendRequest = async (method, endpoint, data, cb, token = null, isFormData = false) => {
+    const sendRequest = async (method, endpoint, data, cb, token = null, isFormData = false, responseType = 'json') => {
         const config = {
             method,
             headers: {
@@ -44,11 +49,11 @@ const userBaseRestRequest = () => {
             }
         }
 
-        await fetchAsync(`${baseURL}${endpoint}`, config, cb);
+        await fetchAsync(`${baseURL}${endpoint}`, config, cb, responseType);
     };
 
-    const get = async (endpoint, data, cb, token) =>
-        await sendRequest(HTTP_METHOD.GET, endpoint, data, cb, token);
+    const get = async (endpoint, data, cb, token, responseType) =>
+        await sendRequest(HTTP_METHOD.GET, endpoint, data, cb, token, false, responseType);
     const post = async (endpoint, data, cb, token, isFormData = false) =>
         await sendRequest(HTTP_METHOD.POST, endpoint, data, cb, token, isFormData);
     const put = async (endpoint, data, cb, token, isFormData = false) =>

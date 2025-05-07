@@ -66,7 +66,7 @@ export default function DiningPlace() {
                     keyword.trim() !== "" &&
                     (restaurant.length > 0 ? <>
                         <h1 className={classes.title}>
-                            Search results for "{keyword}"
+                            Kết quả tìm kiếm cho "{keyword}"
                         </h1>
                         <div className={classes.search_list}>
                             {
@@ -74,10 +74,13 @@ export default function DiningPlace() {
                                     <Restaurant key={e._id} data={e} />)
                             }
                         </div>
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange} />
+                        {
+                            totalPages > 1 &&
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange} />
+                        }
                     </> : <>
                         <ListEmtry error={`Not found results for: "${keyword}"`} />
                     </>)

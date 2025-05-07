@@ -153,7 +153,7 @@ userRouter.put(
       const thumbUpload = req.files?.thumb?.[0]
         ? await cloudinary.uploader.upload(req.files.thumb[0].path)
         : null;
-      console.log(imageUpload.path)
+      // console.log(req.body)
       const user = await User.findById(req.user._id);
       if (user) {
         user.first_name = req.body.first_name || user.first_name;

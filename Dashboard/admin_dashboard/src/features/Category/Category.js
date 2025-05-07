@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState, useContext, useRef } from 'react'
 import classes from './Category.module.css'
 import Table from '../../components/Table/Table'
 import Input from '../../components/Input/Input'
@@ -11,6 +11,7 @@ import EditCategory from '../../components/Pages/Categories/EditCategory/EditCat
 import Pagination from '../../components/Pagination/Pagination'
 import { useToast } from '../../hooks/ToastContext'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
+import { saveAs } from 'file-saver';
 
 export default function Category() {
     const { setLoading } = useContext(LoaderContext)
@@ -28,6 +29,7 @@ export default function Category() {
     const { showToast } = useToast();
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [confirmMessage, setConfirmMessage] = useState("");
+    const fileInputRef = useRef();
 
     const title = [
         "id", "Tên", "Hành động"
@@ -121,6 +123,35 @@ export default function Category() {
         setSelectedCategory(category);
         setShowModal(true);
     };
+
+    const handleImport = (e) => {
+        setLoading(true);
+        const file = e.target.files[0];
+        if (!file) return;
+        CategoryAPI.importExcel(token, { file }, (err, data) => {
+            if (err) {
+                showToast(err.message);
+            }
+            else {
+                showToast(data.message);
+            }
+            setLoading(false);
+        })
+    }
+
+    const handleExport = () => {
+        CategoryAPI.exportExcel(token, (err, data) => {
+            if (err) {
+                showToast(err.message);
+            }
+            else {
+                const blob = new Blob([data], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                });
+                saveAs(blob, `Categories.xlsx`);
+            }
+        })
+    }
     return (
         <div>
             <h1 className={classes.title}>
@@ -139,7 +170,20 @@ export default function Category() {
                 </div>
 
                 <div className={classes.table}>
-                    <Input className={classes.inp_search} placeholder="Tìm kiếm danh mục" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+                    <div className={classes.option}>
+                        <Input className={classes.inp_search} placeholder="Tìm kiếm danh mục" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+                        <div className={classes.imp}>
+                            <Button onClick={handleExport}>Export Excel</Button>
+                            <input
+                                type="file"
+                                accept=".xlsx,.xls"
+                                ref={fileInputRef}
+                                onChange={handleImport}
+                                style={{ display: 'none' }}
+                            />
+                            <Button onClick={() => fileInputRef.current.click()}>Import Excel</Button>
+                        </div>
+                    </div>
                     <Table content={categories} title={title} onEdit={handleEditClick} onDelete={handleDelete} />
                 </div>
                 {totalPages > 1 && (

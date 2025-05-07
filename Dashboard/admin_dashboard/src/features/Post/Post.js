@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useRef, useState, useContext } from 'react'
 import classes from './Post.module.css'
 import Table from '../../components/Table/Table'
 import Input from '../../components/Input/Input'
@@ -13,7 +13,7 @@ import { useToast } from '../../hooks/ToastContext'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useSearchParams } from "react-router-dom";
 import Pagination from '../../components/Pagination/Pagination'
-
+import { saveAs } from 'file-saver';
 
 export default function Post() {
     const [totalPages, setTotalPages] = useState(1);
@@ -32,6 +32,7 @@ export default function Post() {
     const { showToast } = useToast();
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [confirmMessage, setConfirmMessage] = useState("");
+    const fileInputRef = useRef();
 
     useEffect(() => {
         const page = Number(searchParams.get("page")) || 1;
@@ -119,6 +120,36 @@ export default function Post() {
             });
         }
     };
+
+
+    const handleImport = (e) => {
+        setLoading(true);
+        const file = e.target.files[0];
+        if (!file) return;
+        PostAPI.importExcel(token, { file }, (err, data) => {
+            if (err) {
+                showToast(err.message);
+            }
+            else {
+                showToast(data.message);
+            }
+            setLoading(false);
+        })
+    }
+
+    const handleExport = () => {
+        PostAPI.exportExcel(token, (err, data) => {
+            if (err) {
+                showToast(err.error);
+            }
+            else {
+                const blob = new Blob([data], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                });
+                saveAs(blob, `Post.xlsx`);
+            }
+        })
+    }
     return (
         <div>
             <h1 className={classes.title}>
@@ -146,7 +177,21 @@ export default function Post() {
 
                 </div>
                 <div>
-                    <Input className={classes.inp_search} placeholder="Tìm kiếm bài post" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+
+                    <div className={classes.container_head}>
+                        <Input className={classes.inp_search} placeholder="Tìm kiếm bài post" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+                        <div className={classes.imp}>
+                            <Button onClick={handleExport}>Export Excel</Button>
+                            <input
+                                type="file"
+                                accept=".xlsx,.xls"
+                                ref={fileInputRef}
+                                onChange={handleImport}
+                                style={{ display: 'none' }}
+                            />
+                            <Button onClick={() => fileInputRef.current.click()}>Import Excel</Button>
+                        </div>
+                    </div>
                     <div className={classes.table}>
                         {post.map(e => <PostItem key={e._id} post={e} onEdit={handleEdit} onDelete={handleDelete} />)}
                     </div>

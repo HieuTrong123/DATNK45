@@ -23,7 +23,7 @@ export default function RestItem({ data, onEdit, onDelete }) {
             <div className={classes.container}>
                 <div>
                     <p className={classes.name}>{name}</p>
-                    <p>{street} - {ward} - {district} - {province}</p>
+                    <p className={classes.address}>{street} - {ward} - {district} - {province}</p>
                 </div>
                 <div className={classes.icon_box}>
                     <div onClick={handleEdit} className={classes.icon_setting}>

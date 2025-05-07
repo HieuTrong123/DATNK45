@@ -11,6 +11,20 @@ export const RestaurantAPI = {
             if (typeof cb === "function") cb(null, result);
         }, token);
     },
+    async exportExcel(token, cb) {
+        await restRequest.get(`restaurants/export/excel`, {}, (err, result) => {
+            if (err) return cb(err);
+            if (typeof cb === "function") cb(null, result);
+        }, token, 'blob');
+    },
+    async importExcel(token, payload, cb) {
+        const formData = new FormData();
+        formData.append("file", payload.file);
+        await restRequest.post(`restaurants/import/excel`, formData, (err, result) => {
+            if (err) return cb(err);
+            if (typeof cb === "function") cb(null, result);
+        }, token, true);
+    },
     async getAll(token, { pageNumber, keyword }, cb) {
         const queryParams = new URLSearchParams();
         if (pageNumber) queryParams.append("pageNumber", pageNumber);

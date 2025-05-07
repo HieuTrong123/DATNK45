@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react'
+import React, { useEffect, useContext, useRef, useState } from 'react'
 import Button from '../../components/Button/Button'
 import Input from '../../components/Input/Input'
 import classes from './Restaurant.module.css'
@@ -11,6 +11,7 @@ import CreateRestModal from '../../components/Pages/Restaurant/CreateRestaurant'
 import { LoaderContext } from '../../hooks/LoaderContext'
 import { useToast } from '../../hooks/ToastContext'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
+import { saveAs } from 'file-saver';
 
 export default function Restaurant() {
     const { setLoading } = useContext(LoaderContext)
@@ -26,7 +27,7 @@ export default function Restaurant() {
     const { showToast } = useToast();
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [confirmMessage, setConfirmMessage] = useState("");
-
+    const fileInputRef = useRef();
 
     useEffect(() => {
         const page = Number(searchParams.get("page")) || 1;
@@ -116,6 +117,35 @@ export default function Restaurant() {
     const handleCloseModal = () => {
         setEditingRest(null);
     };
+
+    const handleImport = (e) => {
+        setLoading(true);
+        const file = e.target.files[0];
+        if (!file) return;
+        RestaurantAPI.importExcel(token, { file }, (err, data) => {
+            if (err) {
+                showToast(err.message);
+            }
+            else {
+                showToast(data.message);
+            }
+            setLoading(false);
+        })
+    }
+
+    const handleExport = () => {
+        RestaurantAPI.exportExcel(token, (err, data) => {
+            if (err) {
+                showToast(err.error);
+            }
+            else {
+                const blob = new Blob([data], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                });
+                saveAs(blob, `Restaurant.xlsx`);
+            }
+        })
+    }
     return (
         <div>
             <div className={classes.header}>
@@ -129,6 +159,17 @@ export default function Restaurant() {
             <div className={classes.container}>
                 <div className={classes.container_head}>
                     <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} className={classes.inp} type='text' placeholder='Tìm kiếm nhà hàng' />
+                    <div className={classes.imp}>
+                        <Button onClick={handleExport}>Export Excel</Button>
+                        <input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            ref={fileInputRef}
+                            onChange={handleImport}
+                            style={{ display: 'none' }}
+                        />
+                        <Button onClick={() => fileInputRef.current.click()}>Import Excel</Button>
+                    </div>
                 </div>
                 <div className={classes.container_ctn}>
                     {restaurants.map(e => <RestItem key={e._id} data={e} onEdit={handleEdit} onDelete={handleDelete} />)}

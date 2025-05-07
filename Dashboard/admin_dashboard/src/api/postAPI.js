@@ -15,6 +15,21 @@ export const PostAPI = {
     //     });
     // },
 
+    async exportExcel(token, cb) {
+        await restRequest.get(`post/export/excel`, {}, (err, result) => {
+            if (err) return cb(err);
+            if (typeof cb === "function") cb(null, result);
+        }, token, 'blob');
+    },
+    async importExcel(token, payload, cb) {
+        const formData = new FormData();
+        formData.append("file", payload.file);
+        await restRequest.post(`post/import/excel`, formData, (err, result) => {
+            if (err) return cb(err);
+            if (typeof cb === "function") cb(null, result);
+        }, token, true);
+    },
+
     async getAllPost(token, { pageNumber, keyword }, cb) {
         const queryParams = new URLSearchParams();
         if (pageNumber) queryParams.append("pageNumber", pageNumber);

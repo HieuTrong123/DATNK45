@@ -14,7 +14,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary,
     params: {
-        folder: 'foodies', // tên thư mục trên Cloudinary
+        folder: 'dalatfoodies',
         allowed_formats: ['jpg', 'png', 'jpeg'],
     },
 });

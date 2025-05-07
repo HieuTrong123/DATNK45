@@ -4,7 +4,47 @@ import Categories from "../Models/CategoryModel.js";
 import { admin, protect } from "./../Middleware/AuthMiddleware.js";
 import Product from "../Models/ProductModel.js";
 import upload from "../Middleware/Upload.js";
+import uploadExecl from "../Middleware/UploadExcel.js";
+import xlsx from "xlsx"
 const categoriesRoute = express.Router();
+
+categoriesRoute.get("/export/excel",
+  protect,
+  admin,
+  async (req, res) => {
+    try {
+      const data = await Categories.find({}).lean();
+      const ws = xlsx.utils.json_to_sheet(data);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, 'Categories')
+
+      const buffer = xlsx.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+      res.setHeader('Content-Disposition', 'attachment; filename=categories.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    }
+    catch (err) {
+      res.status(500).json({ message: 'Export failed', error: err.message });
+    }
+  })
+
+categoriesRoute.post("/import/excel",
+  protect,
+  admin,
+  uploadExecl.single('file'),
+  async (req, res) => {
+    try {
+      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = xlsx.utils.sheet_to_json(sheet);
+
+      await Categories.insertMany(data);
+      res.status(200).json({ message: 'Import Excel thành công' });
+    } catch (err) {
+      res.status(500).json({ message: 'Import Excel thất bại', error: err.message });
+    }
+  })
 
 categoriesRoute.get("/chart",
   protect,
