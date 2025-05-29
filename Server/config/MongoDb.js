@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import dotenv from 'dotenv';
+dotenv.config();
 const connectDatabase = async () => {
-
+  // mongodb+srv://admin:admin@foodies.hplmw.mongodb.net/?retryWrites=true&w=majority&appName=foodies
   try {
-    const conn = await mongoose.connect('mongodb+srv://admin:admin@foodies.hplmw.mongodb.net/?retryWrites=true&w=majority&appName=foodies', {});
-    // const conn = await mongoose.connect('mongodb://localhost:27017')
+    const conn = await mongoose.connect(process.env.MONGO_URL, {});
     console.log(`MongoDB Connected`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
