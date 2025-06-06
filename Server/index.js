@@ -9,6 +9,7 @@ import restaurantRoute from "./Routes/RestaurantRouter.js";
 import categoriesRoute from "./Routes/CategoriesRouter.js";
 import cors from "cors";
 import postRoute from "./Routes/PostRouter.js";
+import serverless from "serverless-http";
 
 const allowedOrigins = ["http://localhost:3000", "http://localhost:4000"];
 
@@ -62,4 +63,4 @@ app.use(errorHandler);
 // const PORT = process.env.PORT || 8080;
 
 // app.listen(PORT, console.log(`server run in port ${PORT}`));
-export default app;
+export default serverless(app);
