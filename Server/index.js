@@ -14,7 +14,12 @@ import serverless from "serverless-http";
 const allowedOrigins = ["http://localhost:3000", "http://localhost:4000"];
 
 dotenv.config();
-connectDatabase();
+// connectDatabase();
+const startServer = async () => {
+  await connectDatabase();
+};
+
+startServer();
 const app = express();
 app.use(express.json());
 
